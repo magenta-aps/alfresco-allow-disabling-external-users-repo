@@ -3,6 +3,7 @@ package dk.magenta;
 import net.sf.acegisecurity.UserDetails;
 import net.sf.acegisecurity.providers.dao.AuthenticationDao;
 import org.alfresco.model.ContentModel;
+import org.alfresco.repo.security.authentication.AuthenticationException;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.repo.security.authentication.MutableAuthenticationDao;
 import org.alfresco.repo.security.authentication.external.DefaultRemoteUserMapper;
@@ -22,6 +23,9 @@ public class DefaultRemoteUserMapperWithNoDisabledUsers extends DefaultRemoteUse
     @Override
     public String getRemoteUser(HttpServletRequest request) {
         String remoteUser = super.getRemoteUser(request);
+        if (remoteUser == null) {
+            return null;
+        }
         if (isUserEnabled(remoteUser)) {
             return remoteUser;
         } else {
@@ -32,12 +36,7 @@ public class DefaultRemoteUserMapperWithNoDisabledUsers extends DefaultRemoteUse
 
     public boolean isUserEnabled(final String userName) {
         UserDetails userDetails = authenticationDao.loadUserByUsername(userName);
-        if (userDetails == null) {
-            System.out.println("Person doesn't exist");
-            return false;
-        }
-
-        return userDetails.isEnabled();
+        return userDetails != null && userDetails.isEnabled();
     }
 
     public void setAuthenticationDao(MutableAuthenticationDao authenticationDao) {
